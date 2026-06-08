@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divos — Outcome Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#161b27;--card:#1c2333;--card2:#222940;
+  --border:#2a3348;--text:#e8eaf0;--text2:#9aa3b8;--muted:#5a6480;
+  --accent:#f97316;--acbg:rgba(249,115,22,.13);
+  --green:#22c55e;--yellow:#eab308;--red:#ef4444;
+  --indigo:#6366f1;--purple:#a855f7;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;font-size:14px}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;background:var(--bg2)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--card2)}
+
+/* Sidebar */
+#sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.logo{padding:18px 16px 14px;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:-.5px;border-bottom:1px solid var(--border)}
+.nav-group{padding:16px 10px 4px}
+.nav-group-label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:0 6px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;font-size:13px;color:var(--text2);cursor:pointer;transition:background .12s,color .12s;position:relative;margin-bottom:2px}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:var(--acbg);color:var(--accent)}
+.nav-item svg{flex-shrink:0;opacity:.8}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 6px;min-width:18px;text-align:center}
+
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{display:flex;align-items:center;gap:12px;padding:0 24px;height:56px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+#topbar-title{font-size:16px;font-weight:600;flex:1}
+#content{flex:1;overflow-y:auto;padding:24px}
+
+/* Iceberg */
+.iceberg{display:flex;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.iceberg-tile{flex:1;background:var(--card);padding:14px 10px;text-align:center}
+.iceberg-tile.clickable{cursor:pointer;transition:background .15s}
+.iceberg-tile.clickable:hover{background:var(--card2)}
+.iceberg-tile.active{background:var(--acbg);border-bottom:2px solid var(--accent)}
+.it-val{font-size:22px;font-weight:700;line-height:1}
+.it-lbl{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* Sections */
+.section-hd{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border:1px solid var(--border);border-radius:10px;margin-bottom:4px;background:var(--card);user-select:none}
+.section-hd.collapsed .s-chevron{transform:rotate(-90deg)}
+.section-body{margin-bottom:16px}
+.section-body.hidden{display:none}
+.s-title{font-size:13px;font-weight:600}
+.s-pill{font-size:11px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2px 8px}
+.s-chevron{margin-left:auto;transition:transform .2s;color:var(--muted)}
+
+/* Stat row */
+.stat-row{display:grid;gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.s-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.s-val{font-size:24px;font-weight:700;margin-top:6px;line-height:1.1}
+
+/* Goal cards */
+.goal-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;transition:border-color .15s;cursor:pointer;margin-bottom:10px}
+.goal-card:hover{border-color:var(--accent)}
+.goal-card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+
+/* View toggle */
+.view-toggle{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.vt-btn{padding:5px 12px;border-radius:6px;border:none;background:none;color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit}
+.vt-btn.active{background:var(--card2);color:var(--text)}
+
+/* Kanban */
+.kanban-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px}
+.kanban-col{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px}
+.kanban-col-hd{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:4px 4px 10px}
+.kanban-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer}
+.kanban-card:hover{border-color:var(--accent)}
+
+/* Breadcrumb */
+.breadcrumb{font-size:13px;color:var(--muted);margin-bottom:16px}
+.bc-link{color:var(--accent);cursor:pointer}
+.bc-link:hover{text-decoration:underline}
+.bc-sep{margin:0 6px}
+
+/* Chips */
+.health-chip{font-size:11px;padding:3px 8px;border-radius:20px;cursor:pointer;display:inline-block}
+.chip-g{background:rgba(34,197,94,.15);color:var(--green)}
+.chip-y{background:rgba(234,179,8,.15);color:var(--yellow)}
+.chip-r{background:rgba(239,68,68,.15);color:var(--red)}
+.chip-n{background:var(--bg2);color:var(--muted)}
+
+/* Info/warn box */
+.info-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);margin-bottom:12px}
+.info-box.warn{border-color:rgba(234,179,8,.4);background:rgba(234,179,8,.06)}
+.info-box.danger{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
+
+/* Progress bar */
+.pbar-wrap{background:var(--bg2);border-radius:4px;overflow:hidden;height:6px}
+.pbar-fill{height:100%;border-radius:4px;transition:width .3s}
+
+/* Avatar */
+.av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:11px;flex-shrink:0}
+.av-sm{width:24px;height:24px;font-size:10px}
+
+/* Pills */
+.pill{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;line-height:1.5}
+.pill-green{background:rgba(34,197,94,.15);color:var(--green)}
+.pill-yellow{background:rgba(234,179,8,.15);color:var(--yellow)}
+.pill-red{background:rgba(239,68,68,.15);color:var(--red)}
+.pill-orange{background:rgba(249,115,22,.2);color:var(--accent)}
+.pill-muted{background:var(--bg2);color:var(--muted);border:1px solid var(--border)}
+.pill-indigo{background:rgba(99,102,241,.15);color:var(--indigo)}
+.pill-purple{background:rgba(168,85,247,.15);color:var(--purple)}
+
+/* RAG badge */
+.rag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.rag-green{background:rgba(34,197,94,.15);color:var(--green)}
+.rag-yellow{background:rgba(234,179,8,.15);color:var(--yellow)}
+.rag-red{background:rgba(239,68,68,.15);color:var(--red)}
+.rag-none{background:var(--bg2);color:var(--muted);border:1px solid var(--border)}
+
+/* Buffer bar */
+.buf-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--bg2);margin:8px 0}
+.buf-seg{height:100%}
+
+/* Action btn */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+.btn-accent{background:var(--accent);color:#fff}
+
+/* Archive btn */
+.arch-btn{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:5px;display:inline-flex;align-items:center;transition:color .15s}
+.arch-btn:hover{color:var(--text)}
+
+/* Card with header */
+.card-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.card-hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.card-hd-title{font-size:13px;font-weight:600;flex:1}
+
+/* Gantt */
+.gantt-wrap{overflow-x:auto;padding:14px}
+.gantt-grid{display:grid;min-width:900px}
+.gantt-hd{display:grid;grid-template-columns:220px 1fr;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:4px}
+.gantt-months{display:flex}
+.gantt-month{flex:1;font-size:10px;color:var(--muted);text-align:center;font-weight:600;text-transform:uppercase}
+.gantt-row{display:grid;grid-template-columns:220px 1fr;padding:5px 0;border-bottom:1px solid rgba(42,51,72,.5);align-items:center}
+.gantt-label{font-size:12px;color:var(--text2);padding-right:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-track{position:relative;height:20px}
+.gantt-bar{position:absolute;height:16px;top:2px;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;min-width:8px}
+.gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);opacity:.7}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:1000}
+
+/* Bottleneck row */
+.bn-row{border-left:3px solid var(--accent) !important;background:rgba(249,115,22,.06) !important}
+
+/* Archived opacity */
+.archived-item{opacity:.55}
+
+/* Board */
+.board-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px}
+.board-col{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px}
+.board-col-hd{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:4px 4px 10px}
+.board-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px}
+
+/* Stub placeholder */
+.stub-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:12px;color:var(--muted)}
+.stub-wrap svg{opacity:.3}
+.stub-wrap h2{font-size:18px;color:var(--text2)}
+.stub-wrap p{font-size:13px;max-width:320px;text-align:center}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div class="logo">Divos</div>
+  <div class="nav-group">
+    <div class="nav-group-label">Growth Track</div>
+    <div class="nav-item active" data-view="outcomes" onclick="navigate('outcomes')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Outcomes
+    </div>
+    <div class="nav-item" data-view="projects" onclick="navigate('projects')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Projects
+    </div>
+    <div class="nav-item" data-view="mytasks" onclick="navigate('mytasks')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="M3 17h6M13 6h8M13 12h8M13 18h8"/></svg>
+      My Tasks
+    </div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Operations</div>
+    <div class="nav-item" data-view="flows" onclick="navigate('flows')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Flows
+    </div>
+    <div class="nav-item" data-view="loops" onclick="navigate('loops')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      Loops
+    </div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Performance</div>
+    <div class="nav-item" data-view="teamreview" onclick="navigate('teamreview')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Team Review
+    </div>
+    <div class="nav-item" data-view="acemeeting" onclick="navigate('acemeeting')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      ACE Meeting
+    </div>
+    <div class="nav-item" data-view="approvals" onclick="navigate('approvals')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Approvals
+      <span class="nav-badge" id="approval-badge">2</span>
+    </div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">System</div>
+    <div class="nav-item" data-view="settings" onclick="navigate('settings')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+  </div>
+</div>
+<div id="main">
+  <div id="topbar">
+    <div id="topbar-title">Outcomes</div>
+  </div>
+  <div id="content"></div>
+</div>
+<div id="toast"></div>
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────
+var goals = [
+  {id:'g1',archived:false,category:'Working Capital',
+   name:'Reduce order-to-cash cycle time from 16.5 days to 12 days by Sep 2026',
+   metric:'Avg cycle time',current:'16.5 days',target:'12 days',progress:45,
+   deadline:'Sep 30, 2026',owner:'KA',ownerName:'Keshav Agarwal',status:'yellow',
+   projects:['p1','p2','p3']},
+  {id:'g2',archived:false,category:'Delivery Reliability',
+   name:'Improve on-time dispatch rate from 78% to 95% by Aug 2026',
+   metric:'On-time dispatch',current:'78%',target:'95%',progress:28,
+   deadline:'Aug 31, 2026',owner:'SG',ownerName:'Suresh G.',status:'red',
+   projects:['p4','p5']},
+  {id:'g3',archived:false,category:'Delivery Reliability',
+   name:'Reduce customer claims escalations from 8/month to zero by Dec 2026',
+   metric:'Claims escalations',current:'8/month',target:'0/month',progress:80,
+   deadline:'Dec 31, 2026',owner:'HR',ownerName:'Harish R.',status:'green',
+   projects:['p6','p7']},
+  {id:'g4',archived:false,category:'Process Speed',
+   name:'Reduce P2P processing time from 5 days to 3 days by Oct 2026',
+   metric:'P2P cycle time',current:'5 days',target:'3 days',progress:75,
+   deadline:'Oct 31, 2026',owner:'AM',ownerName:'Anita M.',status:'green',
+   projects:['p8','p9']},
+  {id:'g5',archived:false,category:'Lean & Quality',
+   name:'Reduce production waste from 23% to 8% by Mar 2027',
+   metric:'Production waste',current:'23%',target:'8%',progress:35,
+   deadline:'Mar 31, 2027',owner:'VV',ownerName:'Vijay V.',status:'yellow',
+   projects:['p10','p11','p12']},
+];
+
+var projects = [
+  {id:'p1',archived:false,goalId:'g1',name:'Automate invoice matching',
+   milestone:'System live, processing 80% of invoices',due:'Jul 15',proposedDue:'Jul 22',
+   owner:'KA',ownerName:'Keshav A.',planned:'green',actual:'green',health:78,total:9,done:7,delayed:0,
+   type:'delegated',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p2',archived:false,goalId:'g1',name:'Streamline credit approval workflow',
+   milestone:'Credit decisions in <4hrs',due:'Jun 30',proposedDue:null,
+   owner:'AM',ownerName:'Anita M.',planned:'yellow',actual:'yellow',health:55,total:7,done:4,delayed:2,
+   type:'owned',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p3',archived:false,goalId:'g1',name:'Collections follow-up automation',
+   milestone:'Automated follow-ups for 90% of overdue invoices',due:'Aug 20',proposedDue:null,
+   owner:'VV',ownerName:'Vijay V.',planned:'green',actual:'red',health:30,total:8,done:2,delayed:4,
+   type:'cross-functional',approvalStatus:'pending',deliveredE:null,deliveredL:null},
+  {id:'p4',archived:false,goalId:'g2',name:'Dispatch SOP standardisation',
+   milestone:'Unified SOP deployed to all 3 warehouses',due:'May 30',proposedDue:'Jun 15',
+   owner:'SG',ownerName:'Suresh G.',planned:'green',actual:'yellow',health:43,total:7,done:3,delayed:3,
+   type:'delegated',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p5',archived:false,goalId:'g2',name:'Real-time shipment tracking',
+   milestone:'Live dashboard with 95% data accuracy',due:'Jul 31',proposedDue:null,
+   owner:'DP',ownerName:'Deepak P.',planned:'green',actual:'green',health:65,total:6,done:4,delayed:0,
+   type:'owned',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p6',archived:false,goalId:'g3',name:'Customer claims root cause analysis',
+   milestone:'Root causes documented and action plan signed off',due:'Apr 30',proposedDue:null,
+   owner:'HR',ownerName:'Harish R.',planned:'green',actual:'green',health:90,total:5,done:4,delayed:0,
+   type:'cross-functional',approvalStatus:'approved',deliveredE:2,deliveredL:null},
+  {id:'p7',archived:false,goalId:'g3',name:'Preventive QC checkpoints',
+   milestone:'QC checkpoints active at all dispatch gates',due:'Jun 15',proposedDue:null,
+   owner:'PM',ownerName:'Priya M.',planned:'yellow',actual:'green',health:85,total:6,done:5,delayed:0,
+   type:'owned',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p8',archived:false,goalId:'g4',name:'Vendor onboarding portal',
+   milestone:'Portal live, 80% of vendors self-onboarding',due:'Jul 10',proposedDue:null,
+   owner:'SB',ownerName:'Sandeep B.',planned:'green',actual:'green',health:72,total:8,done:6,delayed:0,
+   type:'delegated',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p9',archived:false,goalId:'g4',name:'PO approval workflow automation',
+   milestone:'POs auto-routed and approved in <24hrs',due:'Jun 20',proposedDue:'Jun 27',
+   owner:'AM',ownerName:'Anita M.',planned:'green',actual:'yellow',health:50,total:6,done:3,delayed:2,
+   type:'owned',approvalStatus:'pending',deliveredE:null,deliveredL:null},
+  {id:'p10',archived:false,goalId:'g5',name:'Waste mapping exercise',
+   milestone:'Waste sources quantified for all 5 production lines',due:'Mar 31',proposedDue:null,
+   owner:'VV',ownerName:'Vijay V.',planned:'yellow',actual:'green',health:100,total:5,done:5,delayed:0,
+   type:'delegated',approvalStatus:'approved',deliveredE:3,deliveredL:null},
+  {id:'p11',archived:false,goalId:'g5',name:'Lean training programme',
+   milestone:'100% of shop floor supervisors trained',due:'Jun 30',proposedDue:null,
+   owner:'HR',ownerName:'Harish R.',planned:'green',actual:'yellow',health:40,total:7,done:3,delayed:2,
+   type:'cross-functional',approvalStatus:'approved',deliveredE:null,deliveredL:null},
+  {id:'p12',archived:false,goalId:'g5',name:'5S implementation — Line 1',
+   milestone:'5S audit score >85% on Line 1',due:'Aug 15',proposedDue:null,
+   owner:'PM',ownerName:'Priya M.',planned:'green',actual:'green',health:60,total:5,done:3,delayed:0,
+   type:'owned',approvalStatus:'pending',deliveredE:null,deliveredL:null},
+];
+
+var tasksData = {
+  p1:[
+    {name:'Map invoice matching workflow',done:true,due:'past',assignee:'KA',doer:'Keshav A.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Mar, 9:00 AM',actualDate:'4 Mar, 6:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Evaluate matching software vendors',done:true,due:'past',assignee:'KA',doer:'Keshav A.',tatDays:4,parallel:false,feedsBefore:null,planDate:'5 Mar, 9:00 AM',actualDate:'9 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Vendor RFP and shortlisting',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:5,parallel:false,feedsBefore:null,planDate:'12 Mar, 9:00 AM',actualDate:'17 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Legal review of vendor contract',done:true,due:'past',assignee:'KA',doer:'Keshav A.',tatDays:3,parallel:true,feedsBefore:4,planDate:'12 Mar, 9:00 AM',actualDate:'14 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Configure and integrate system',done:true,due:'past',assignee:'KA',doer:'Keshav A.',tatDays:7,parallel:false,feedsBefore:null,planDate:'20 Mar, 9:00 AM',actualDate:'28 Mar, 6:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'UAT with finance team',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:4,parallel:false,feedsBefore:null,planDate:'1 Apr, 9:00 AM',actualDate:'5 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Staff training',done:true,due:'past',assignee:'KA',doer:'Keshav A.',tatDays:3,parallel:false,feedsBefore:null,planDate:'8 Apr, 9:00 AM',actualDate:'10 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Go-live and hypercare',done:false,due:'today',assignee:'KA',doer:'Keshav A.',tatDays:5,parallel:false,feedsBefore:null,planDate:'1 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Post-launch monitoring report',done:false,due:'future',assignee:'AM',doer:'Anita M.',tatDays:3,parallel:false,feedsBefore:null,planDate:'10 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p2:[
+    {name:'Document current credit approval steps',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:2,parallel:false,feedsBefore:null,planDate:'5 Mar, 9:00 AM',actualDate:'6 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Identify bottlenecks and escalation points',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:3,parallel:false,feedsBefore:null,planDate:'10 Mar, 9:00 AM',actualDate:'13 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Design new approval matrix',done:true,due:'past',assignee:'KA',doer:'Keshav A.',tatDays:4,parallel:false,feedsBefore:null,planDate:'15 Mar, 9:00 AM',actualDate:'19 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Build workflow automation rules',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:6,parallel:false,feedsBefore:null,planDate:'22 Mar, 9:00 AM',actualDate:'1 Apr, 5:00 PM',delayDays:2,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Test with sample credit requests',done:false,due:'overdue',assignee:'AM',doer:'Anita M.',tatDays:3,parallel:false,feedsBefore:null,planDate:'15 May, 9:00 AM',actualDate:null,delayDays:5,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Training for credit officers',done:false,due:'overdue',assignee:'KA',doer:'Keshav A.',tatDays:2,parallel:true,feedsBefore:6,planDate:'20 May, 9:00 AM',actualDate:null,delayDays:4,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Go-live',done:false,due:'future',assignee:'AM',doer:'Anita M.',tatDays:2,parallel:false,feedsBefore:null,planDate:'25 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p3:[
+    {name:'Map current collections process',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:3,parallel:false,feedsBefore:null,planDate:'10 Feb, 9:00 AM',actualDate:'12 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Define automation triggers and rules',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:4,parallel:false,feedsBefore:null,planDate:'18 Feb, 9:00 AM',actualDate:'22 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Select collections software platform',done:false,due:'overdue',assignee:'KA',doer:'Keshav A.',tatDays:5,parallel:false,feedsBefore:null,planDate:'1 Mar, 9:00 AM',actualDate:null,delayDays:14,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Configure email and SMS templates',done:false,due:'overdue',assignee:'VV',doer:'Vijay V.',tatDays:4,parallel:false,feedsBefore:null,planDate:'15 Mar, 9:00 AM',actualDate:null,delayDays:12,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Integration with ERP',done:false,due:'overdue',assignee:'VV',doer:'Vijay V.',tatDays:6,parallel:false,feedsBefore:null,planDate:'1 Apr, 9:00 AM',actualDate:null,delayDays:10,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Legal compliance review',done:false,due:'overdue',assignee:'KA',doer:'Keshav A.',tatDays:3,parallel:true,feedsBefore:5,planDate:'1 Apr, 9:00 AM',actualDate:null,delayDays:8,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Pilot with 10 overdue accounts',done:false,due:'future',assignee:'VV',doer:'Vijay V.',tatDays:5,parallel:false,feedsBefore:null,planDate:'15 Jul, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Full rollout',done:false,due:'future',assignee:'VV',doer:'Vijay V.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Aug, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p4:[
+    {name:'Document current dispatch process',done:true,due:'past',assignee:'SG',doer:'Suresh G.',tatDays:2,parallel:false,feedsBefore:null,planDate:'3 Mar, 9:00 AM',actualDate:'3 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Identify gaps across 3 warehouses',done:true,due:'past',assignee:'SG',doer:'Suresh G.',tatDays:3,parallel:false,feedsBefore:null,planDate:'8 Mar, 9:00 AM',actualDate:'8 Mar, 5:30 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Draft unified SOP',done:false,due:'overdue',assignee:'DP',doer:'Deepak P.',tatDays:4,parallel:false,feedsBefore:null,planDate:'12 Mar, 9:00 AM',actualDate:null,delayDays:6,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Review with warehouse heads',done:false,due:'overdue',assignee:'SG',doer:'Suresh G.',tatDays:2,parallel:false,feedsBefore:null,planDate:'18 Mar, 9:00 AM',actualDate:null,delayDays:6,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Training rollout — WH 1',done:false,due:'overdue',assignee:'DP',doer:'Deepak P.',tatDays:3,parallel:false,feedsBefore:null,planDate:'25 Apr, 9:00 AM',actualDate:null,delayDays:3,delayHrs:4,earlyDays:0,earlyHrs:0},
+    {name:'Training rollout — WH 2',done:false,due:'overdue',assignee:'DP',doer:'Deepak P.',tatDays:3,parallel:true,feedsBefore:4,planDate:'1 May, 9:00 AM',actualDate:null,delayDays:3,delayHrs:4,earlyDays:0,earlyHrs:0},
+    {name:'Training rollout — WH 3',done:false,due:'future',assignee:'SG',doer:'Suresh G.',tatDays:3,parallel:true,feedsBefore:4,planDate:'15 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p5:[
+    {name:'Define tracking requirements',done:true,due:'past',assignee:'DP',doer:'Deepak P.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Apr, 9:00 AM',actualDate:'3 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Select GPS/IoT vendor',done:true,due:'past',assignee:'DP',doer:'Deepak P.',tatDays:5,parallel:false,feedsBefore:null,planDate:'8 Apr, 9:00 AM',actualDate:'13 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Hardware procurement and installation',done:true,due:'past',assignee:'SG',doer:'Suresh G.',tatDays:7,parallel:false,feedsBefore:null,planDate:'20 Apr, 9:00 AM',actualDate:'27 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Dashboard development',done:true,due:'past',assignee:'DP',doer:'Deepak P.',tatDays:10,parallel:false,feedsBefore:null,planDate:'1 May, 9:00 AM',actualDate:'12 May, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Data accuracy testing',done:false,due:'today',assignee:'DP',doer:'Deepak P.',tatDays:4,parallel:false,feedsBefore:null,planDate:'1 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Go-live and staff training',done:false,due:'future',assignee:'SG',doer:'Suresh G.',tatDays:3,parallel:false,feedsBefore:null,planDate:'20 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p6:[
+    {name:'Collect all claims data (last 12 months)',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Feb, 9:00 AM',actualDate:'3 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Categorise and code claims by type',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:4,parallel:false,feedsBefore:null,planDate:'5 Feb, 9:00 AM',actualDate:'8 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Root cause workshop with ops team',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:2,parallel:false,feedsBefore:null,planDate:'12 Feb, 9:00 AM',actualDate:'14 Feb, 3:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Draft action plan',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:3,parallel:false,feedsBefore:null,planDate:'16 Feb, 9:00 AM',actualDate:'18 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Senior management sign-off',done:false,due:'today',assignee:'HR',doer:'Harish R.',tatDays:1,parallel:false,feedsBefore:null,planDate:'1 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p7:[
+    {name:'Map all dispatch gate checkpoints',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:2,parallel:false,feedsBefore:null,planDate:'1 Mar, 9:00 AM',actualDate:'2 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Define QC criteria per product type',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:4,parallel:false,feedsBefore:null,planDate:'5 Mar, 9:00 AM',actualDate:'8 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Create QC checklist templates',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:3,parallel:false,feedsBefore:null,planDate:'12 Mar, 9:00 AM',actualDate:'14 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Train QC inspectors',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:4,parallel:false,feedsBefore:null,planDate:'18 Mar, 9:00 AM',actualDate:'22 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Pilot at Gate 1',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:5,parallel:false,feedsBefore:null,planDate:'25 Mar, 9:00 AM',actualDate:'1 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Roll out to all gates',done:false,due:'future',assignee:'PM',doer:'Priya M.',tatDays:5,parallel:false,feedsBefore:null,planDate:'15 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p8:[
+    {name:'Define vendor onboarding requirements',done:true,due:'past',assignee:'SB',doer:'Sandeep B.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Mar, 9:00 AM',actualDate:'3 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Vendor survey and gap analysis',done:true,due:'past',assignee:'SB',doer:'Sandeep B.',tatDays:5,parallel:false,feedsBefore:null,planDate:'5 Mar, 9:00 AM',actualDate:'10 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Portal design and wireframes',done:true,due:'past',assignee:'SB',doer:'Sandeep B.',tatDays:6,parallel:false,feedsBefore:null,planDate:'15 Mar, 9:00 AM',actualDate:'21 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Portal development (phase 1)',done:true,due:'past',assignee:'SB',doer:'Sandeep B.',tatDays:14,parallel:false,feedsBefore:null,planDate:'25 Mar, 9:00 AM',actualDate:'10 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:2,earlyHrs:0},
+    {name:'Integration with procurement system',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:7,parallel:true,feedsBefore:5,planDate:'1 Apr, 9:00 AM',actualDate:'8 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'UAT with 5 pilot vendors',done:true,due:'past',assignee:'SB',doer:'Sandeep B.',tatDays:5,parallel:false,feedsBefore:null,planDate:'15 Apr, 9:00 AM',actualDate:'20 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Onboard remaining vendors',done:false,due:'today',assignee:'SB',doer:'Sandeep B.',tatDays:14,parallel:false,feedsBefore:null,planDate:'1 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Measure self-onboarding rate',done:false,due:'future',assignee:'SB',doer:'Sandeep B.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Jul, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p9:[
+    {name:'Document current PO approval flow',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:2,parallel:false,feedsBefore:null,planDate:'1 Apr, 9:00 AM',actualDate:'2 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Define new routing rules and thresholds',done:true,due:'past',assignee:'AM',doer:'Anita M.',tatDays:3,parallel:false,feedsBefore:null,planDate:'6 Apr, 9:00 AM',actualDate:'9 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Configure workflow automation',done:true,due:'past',assignee:'SB',doer:'Sandeep B.',tatDays:6,parallel:false,feedsBefore:null,planDate:'12 Apr, 9:00 AM',actualDate:'18 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Test with finance team',done:false,due:'overdue',assignee:'AM',doer:'Anita M.',tatDays:4,parallel:false,feedsBefore:null,planDate:'1 May, 9:00 AM',actualDate:null,delayDays:8,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Approver training sessions',done:false,due:'overdue',assignee:'AM',doer:'Anita M.',tatDays:2,parallel:true,feedsBefore:5,planDate:'10 May, 9:00 AM',actualDate:null,delayDays:5,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Go-live',done:false,due:'future',assignee:'AM',doer:'Anita M.',tatDays:1,parallel:false,feedsBefore:null,planDate:'1 Jul, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p10:[
+    {name:'Identify all production lines and waste streams',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:2,parallel:false,feedsBefore:null,planDate:'1 Jan, 9:00 AM',actualDate:'2 Jan, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Deploy waste tracking sheets per line',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:3,parallel:false,feedsBefore:null,planDate:'6 Jan, 9:00 AM',actualDate:'9 Jan, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Collect 4-week baseline data',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:20,parallel:false,feedsBefore:null,planDate:'10 Jan, 9:00 AM',actualDate:'30 Jan, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:3,earlyHrs:0},
+    {name:'Analyse waste patterns and root causes',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:4,parallel:false,feedsBefore:null,planDate:'1 Feb, 9:00 AM',actualDate:'4 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Present findings to leadership',done:true,due:'past',assignee:'VV',doer:'Vijay V.',tatDays:2,parallel:false,feedsBefore:null,planDate:'10 Feb, 9:00 AM',actualDate:'11 Feb, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+  ],
+  p11:[
+    {name:'Identify all supervisors requiring training',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:2,parallel:false,feedsBefore:null,planDate:'1 Mar, 9:00 AM',actualDate:'2 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:1,earlyHrs:0},
+    {name:'Design lean training curriculum',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:5,parallel:false,feedsBefore:null,planDate:'5 Mar, 9:00 AM',actualDate:'10 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Engage external lean trainer',done:true,due:'past',assignee:'HR',doer:'Harish R.',tatDays:3,parallel:true,feedsBefore:4,planDate:'5 Mar, 9:00 AM',actualDate:'8 Mar, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Batch 1 training (10 supervisors)',done:false,due:'overdue',assignee:'HR',doer:'Harish R.',tatDays:5,parallel:false,feedsBefore:null,planDate:'1 Apr, 9:00 AM',actualDate:null,delayDays:8,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Batch 2 training (10 supervisors)',done:false,due:'overdue',assignee:'HR',doer:'Harish R.',tatDays:5,parallel:false,feedsBefore:null,planDate:'15 Apr, 9:00 AM',actualDate:null,delayDays:6,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Batch 3 training (remaining)',done:false,due:'future',assignee:'HR',doer:'Harish R.',tatDays:5,parallel:false,feedsBefore:null,planDate:'15 Jul, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Certification assessment',done:false,due:'future',assignee:'HR',doer:'Harish R.',tatDays:3,parallel:false,feedsBefore:null,planDate:'1 Aug, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+  p12:[
+    {name:'5S awareness session for Line 1 team',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:1,parallel:false,feedsBefore:null,planDate:'1 Apr, 9:00 AM',actualDate:'1 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Sort (Seiri) — remove unnecessary items',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:3,parallel:false,feedsBefore:null,planDate:'3 Apr, 9:00 AM',actualDate:'6 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Set in order (Seiton) — organise workspace',done:true,due:'past',assignee:'PM',doer:'Priya M.',tatDays:4,parallel:false,feedsBefore:null,planDate:'10 Apr, 9:00 AM',actualDate:'14 Apr, 5:00 PM',delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Shine (Seiso) — deep clean',done:false,due:'today',assignee:'PM',doer:'Priya M.',tatDays:2,parallel:false,feedsBefore:null,planDate:'1 Jun, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+    {name:'Standardise and conduct audit',done:false,due:'future',assignee:'PM',doer:'Priya M.',tatDays:5,parallel:false,feedsBefore:null,planDate:'1 Aug, 9:00 AM',actualDate:null,delayDays:0,delayHrs:0,earlyDays:0,earlyHrs:0},
+  ],
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+var currentView = 'outcomes';
+var taskViewMode = 'list';
+var outcomeViewMode = 'list';
+var viewCtx = {};
+var prevView = null;
+var prevCtx = {};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+var avColors = {
+  KA:'#6366f1',AM:'#a855f7',VV:'#22c55e',PM:'#f97316',
+  SG:'#eab308',DP:'#ef4444',HR:'#06b6d4',SB:'#ec4899'
+};
+
+function avatar(initials, size) {
+  var sz = size === 'sm' ? 24 : 28;
+  var fs = size === 'sm' ? 10 : 11;
+  var bg = avColors[initials] || '#5a6480';
+  return '<span class="av" style="width:' + sz + 'px;height:' + sz + 'px;font-size:' + fs + 'px;background:' + bg + ';color:#fff">' + initials + '</span>';
+}
+
+function rag(status) {
+  if (status === 'green') return '<span class="rag rag-green"><span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>On Track</span>';
+  if (status === 'yellow') return '<span class="rag rag-yellow"><span style="width:7px;height:7px;border-radius:50%;background:var(--yellow);display:inline-block"></span>At Risk</span>';
+  if (status === 'red') return '<span class="rag rag-red"><span style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block"></span>Off Track</span>';
+  return '<span class="rag rag-none">Not Set</span>';
+}
+
+function hbar(pct, h) {
+  h = h || 6;
+  var color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)';
+  return '<div class="pbar-wrap" style="height:' + h + 'px"><div class="pbar-fill" style="width:' + Math.min(100,pct) + '%;background:' + color + ';height:100%"></div></div>';
+}
+
+function deliveryBadge(p) {
+  if (p.deliveredE) return '<span class="pill pill-green">' + p.deliveredE + 'd early</span>';
+  if (p.deliveredL) return '<span class="pill pill-red">' + p.deliveredL + 'd late</span>';
+  return '<span style="color:var(--muted);font-size:12px">—</span>';
+}
+
+function typeBadge(type) {
+  if (type === 'delegated') return '<span class="pill pill-indigo">Delegated</span>';
+  if (type === 'owned') return '<span class="pill pill-purple">Owned</span>';
+  if (type === 'cross-functional') return '<span class="pill pill-muted">Cross-func</span>';
+  return '';
+}
+
+function approvalBadge(status) {
+  if (status === 'approved') return '<span class="pill pill-green">Approved</span>';
+  return '<span class="pill pill-yellow">Pending</span>';
+}
+
+function chipClass(status) {
+  if (status === 'green') return 'chip-g';
+  if (status === 'yellow') return 'chip-y';
+  if (status === 'red') return 'chip-r';
+  return 'chip-n';
+}
+
+function archSvg() {
+  return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>';
+}
+
+function restoreSvg() {
+  return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4.8L1 10"/></svg>';
+}
+
+function chevSvg() {
+  return '<svg class="s-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+}
+
+function delayBar(t) {
+  var maxDays = 10;
+  var lateDays = t.delayDays || 0;
+  var earlyDays = t.earlyDays || 0;
+  var leftPct = 0, rightPct = 0, label = '';
+  if (t.done) {
+    if (lateDays > 0) {
+      rightPct = Math.min(100, lateDays / maxDays * 100);
+      label = '<span style="font-size:11px;color:var(--red)">' + lateDays + 'd' + (t.delayHrs ? ' ' + t.delayHrs + 'h' : '') + ' late</span>';
+    } else if (earlyDays > 0) {
+      leftPct = Math.min(100, earlyDays / maxDays * 100);
+      label = '<span style="font-size:11px;color:var(--green)">' + earlyDays + 'd early</span>';
+    } else {
+      label = '<span style="font-size:11px;color:var(--green)">On time</span>';
+    }
+  } else if (lateDays > 0) {
+    rightPct = Math.min(100, lateDays / maxDays * 100);
+    label = '<span style="font-size:11px;color:var(--red)">' + lateDays + 'd' + (t.delayHrs ? ' ' + t.delayHrs + 'h' : '') + ' late</span>';
+  } else {
+    return '<span style="font-size:11px;color:var(--muted)">—</span>';
+  }
+  var bar = '<div style="width:90px;height:6px;background:var(--bg2);border-radius:3px;position:relative;overflow:visible">'
+    + (leftPct > 0 ? '<div style="position:absolute;right:50%;width:' + (leftPct / 2) + '%;height:100%;background:var(--green);border-radius:3px 0 0 3px"></div>' : '')
+    + (rightPct > 0 ? '<div style="position:absolute;left:50%;width:' + (rightPct / 2) + '%;height:100%;background:var(--red);border-radius:0 3px 3px 0"></div>' : '')
+    + '<div style="position:absolute;left:calc(50% - 0.5px);top:-1px;width:1px;height:8px;background:var(--muted);opacity:.6"></div>'
+    + '</div>';
+  return '<div style="display:flex;flex-direction:column;gap:4px">' + bar + label + '</div>';
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(function(){ t.style.opacity = '0'; }, 2500);
+}
+
+function toggleSection(id) {
+  var body = document.getElementById('sb-' + id);
+  var hd = document.getElementById('sh-' + id);
+  if (!body || !hd) return;
+  body.classList.toggle('hidden');
+  hd.classList.toggle('collapsed');
+}
+
+function archiveItem(type, id) {
+  if (type === 'goal') {
+    var g = goals.find(function(x){ return x.id === id; });
+    if (g) { g.archived = !g.archived; showToast(g.archived ? 'Outcome archived' : 'Outcome restored'); }
+  } else {
+    var p = projects.find(function(x){ return x.id === id; });
+    if (p) { p.archived = !p.archived; showToast(p.archived ? 'Project archived' : 'Project restored'); }
+  }
+  render();
+}
+
+// ─── CCPM ─────────────────────────────────────────────────────────────────────
+function computeCCPM(tasks) {
+  var ccTasks = tasks.filter(function(t){ return !t.parallel; });
+  var projectBuffer = ccTasks.reduce(function(s,t){ return s + t.tatDays; }, 0) * 0.5;
+  var bufferConsumed = ccTasks.reduce(function(s,t){
+    if (t.done) return s + (t.delayDays - t.earlyDays);
+    return s;
+  }, 0);
+  bufferConsumed = Math.max(0, bufferConsumed);
+  var bufferRemaining = Math.max(0, projectBuffer - bufferConsumed);
+  var bufferPct = projectBuffer > 0 ? (bufferConsumed / projectBuffer * 100) : 0;
+  var bufferStatus = bufferPct > 66 ? 'red' : bufferPct > 33 ? 'yellow' : 'green';
+  var activeBottleneck = null;
+  for (var i = 0; i < tasks.length; i++) {
+    if (!tasks[i].parallel && !tasks[i].done) { activeBottleneck = i; break; }
+  }
+  var feedingAtRisk = {};
+  tasks.forEach(function(t, i){
+    if (t.parallel) {
+      var fb = t.tatDays * 0.5;
+      var fc = Math.min(fb, t.delayDays);
+      var fpct = fb > 0 ? (fc / fb * 100) : 0;
+      feedingAtRisk[i] = { pct: fpct, exhausted: fpct >= 100, low: fpct >= 40 };
+    }
+  });
+  return { projectBuffer: projectBuffer, bufferConsumed: bufferConsumed,
+    bufferRemaining: bufferRemaining, bufferPct: bufferPct, bufferStatus: bufferStatus,
+    activeBottleneck: activeBottleneck, feedingAtRisk: feedingAtRisk };
+}
+
+// ─── GANTT HELPERS ────────────────────────────────────────────────────────────
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function parsePlanDate(str) {
+  if (!str) return null;
+  var parts = str.split(', ');
+  var dateParts = parts[0].split(' ');
+  var day = parseInt(dateParts[0]);
+  var mon = MONTHS.indexOf(dateParts[1]);
+  if (mon === -1) return null;
+  return new Date(2026, mon, day);
+}
+
+function ganttBarLeft(date) {
+  var start = new Date(2026, 0, 1);
+  var end = new Date(2026, 11, 31);
+  var total = end - start;
+  var offset = date - start;
+  return Math.max(0, Math.min(100, offset / total * 100));
+}
+
+function ganttTodayLeft() {
+  return ganttBarLeft(new Date(2026, 5, 1));
+}
+
+function ganttBarWidth(tatDays) {
+  return Math.max(1, tatDays / 365 * 100);
+}
+
+// ─── VIEW: OUTCOMES ───────────────────────────────────────────────────────────
+function renderOutcomes() {
+  var filter = viewCtx.filter || 'need-attention';
+  var active = goals.filter(function(g){ return !g.archived; });
+  var archived = goals.filter(function(g){ return g.archived; });
+
+  var tiles = [
+    {key:'all', label:'All', val: active.length},
+    {key:'completed', label:'Completed', val: active.filter(function(g){return g.progress>=100;}).length},
+    {key:'on-track', label:'On Track', val: active.filter(function(g){return g.status==='green';}).length},
+    {key:'need-attention', label:'Need Attention', val: active.filter(function(g){return g.status==='yellow';}).length},
+    {key:'at-risk', label:'At Risk', val: active.filter(function(g){return g.status==='yellow' && projects.filter(function(p){return p.goalId===g.id&&p.delayed>0;}).length>0;}).length},
+    {key:'overdue', label:'Overdue', val: active.filter(function(g){return g.status==='red';}).length},
+    {key:'archived', label:'Archived', val: archived.length},
+  ];
+
+  var filtered;
+  if (filter === 'all') filtered = active;
+  else if (filter === 'completed') filtered = active.filter(function(g){return g.progress>=100;});
+  else if (filter === 'on-track') filtered = active.filter(function(g){return g.status==='green';});
+  else if (filter === 'need-attention') filtered = active.filter(function(g){return g.status==='yellow';});
+  else if (filter === 'at-risk') filtered = active.filter(function(g){return g.status==='yellow' && projects.filter(function(p){return p.goalId===g.id&&p.delayed>0;}).length>0;});
+  else if (filter === 'overdue') filtered = active.filter(function(g){return g.status==='red';});
+  else if (filter === 'archived') filtered = archived;
+  else filtered = active;
+
+  var cats = ['Working Capital','Delivery Reliability','Process Speed','Lean & Quality'];
+  var byCategory = {};
+  cats.forEach(function(c){ byCategory[c] = []; });
+  filtered.forEach(function(g){
+    if (byCategory[g.category]) byCategory[g.category].push(g);
+  });
+
+  var iceHtml = '<div class="iceberg">';
+  tiles.forEach(function(t){
+    iceHtml += '<div class="iceberg-tile clickable' + (filter===t.key?' active':'') + '" onclick="navigate(\'outcomes\',{filter:\'' + t.key + '\'})">'
+      + '<div class="it-val">' + t.val + '</div>'
+      + '<div class="it-lbl">' + t.label + '</div>'
+      + '</div>';
+  });
+  iceHtml += '</div>';
+
+  var sectionsHtml = '';
+  cats.forEach(function(cat){
+    var gs = byCategory[cat];
+    if (!gs || gs.length === 0) return;
+    var gCount = gs.length;
+    var gGreen = gs.filter(function(g){return g.status==='green';}).length;
+    var gYellow = gs.filter(function(g){return g.status==='yellow';}).length;
+    var gRed = gs.filter(function(g){return g.status==='red';}).length;
+    var pCount = gs.reduce(function(s,g){return s+projects.filter(function(p){return p.goalId===g.id&&!p.archived;}).length;},0);
+    var pDelayed = gs.reduce(function(s,g){return s+projects.filter(function(p){return p.goalId===g.id&&p.delayed>0;}).length;},0);
+    var sid = cat.replace(/\s+/g,'-').toLowerCase();
+
+    var statusPills = '';
+    if (gGreen) statusPills += '<span style="font-size:11px;color:var(--green)">' + gGreen + ' &#9679;</span> ';
+    if (gYellow) statusPills += '<span style="font-size:11px;color:var(--yellow)">' + gYellow + ' &#9679;</span> ';
+    if (gRed) statusPills += '<span style="font-size:11px;color:var(--red)">' + gRed + ' &#9679;</span> ';
+
+    sectionsHtml += '<div id="sh-' + sid + '" class="section-hd" onclick="toggleSection(\'' + sid + '\')">'
+      + '<span class="s-title">' + cat + '</span>'
+      + '<span class="s-pill">' + gCount + ' outcome' + (gCount!==1?'s':'') + '</span>'
+      + statusPills
+      + '<span class="s-pill">' + pCount + ' projects</span>'
+      + (pDelayed ? '<span class="s-pill" style="color:var(--red)">' + pDelayed + ' delayed</span>' : '')
+      + chevSvg()
+      + '</div>';
+    sectionsHtml += '<div id="sb-' + sid + '" class="section-body">';
+    gs.forEach(function(g){
+      var gProjects = projects.filter(function(p){ return p.goalId===g.id; });
+      var chips = gProjects.map(function(p){
+        return '<span class="health-chip ' + chipClass(p.actual) + '" onclick="event.stopPropagation();navigate(\'project-detail\',{projectId:\'' + p.id + '\',from:\'outcome\',goalId:\'' + g.id + '\'})" title="' + p.name + '">' + p.name.substring(0,18) + (p.name.length>18?'…':'') + '</span>';
+      }).join(' ');
+      sectionsHtml += '<div class="goal-card" onclick="navigate(\'outcome-detail\',{goalId:\'' + g.id + '\'})">'
+        + '<div class="goal-card-top">'
+        + '<div style="flex:1"><span style="font-size:14px;font-weight:600;line-height:1.4">' + g.name + '</span></div>'
+        + rag(g.status)
+        + '<button class="arch-btn" onclick="event.stopPropagation();archiveItem(\'goal\',\'' + g.id + '\')" title="Archive">' + archSvg() + '</button>'
+        + '</div>'
+        + '<div style="font-size:12px;color:var(--text2);margin-bottom:8px">' + g.metric + ': <strong>' + g.current + '</strong> → <strong>' + g.target + '</strong></div>'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+        + '<div style="flex:1">' + hbar(g.progress) + '</div>'
+        + '<span style="font-size:12px;color:var(--text2);min-width:32px;text-align:right">' + g.progress + '%</span>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between">'
+        + '<div style="display:flex;align-items:center;gap:6px">' + avatar(g.owner,'sm') + '<span style="font-size:12px;color:var(--text2)">' + g.ownerName + '</span></div>'
+        + '<div style="display:flex;gap:4px;flex-wrap:wrap">' + chips + '</div>'
+        + '</div>'
+        + '</div>';
+    });
+    sectionsHtml += '</div>';
+  });
+
+  if (archived.length > 0) {
+    sectionsHtml += '<div id="sh-archived-goals" class="section-hd collapsed" onclick="toggleSection(\'archived-goals\')">'
+      + '<span class="s-title" style="color:var(--muted)">Archived</span>'
+      + '<span class="s-pill">' + archived.length + '</span>'
+      + chevSvg()
+      + '</div>'
+      + '<div id="sb-archived-goals" class="section-body hidden">';
+    archived.forEach(function(g){
+      sectionsHtml += '<div class="goal-card archived-item">'
+        + '<div class="goal-card-top">'
+        + '<div style="flex:1;font-size:14px;font-weight:600">' + g.name + '</div>'
+        + '<button class="arch-btn" onclick="archiveItem(\'goal\',\'' + g.id + '\')" title="Restore">' + restoreSvg() + '</button>'
+        + '</div></div>';
+    });
+    sectionsHtml += '</div>';
+  }
+
+  return iceHtml + sectionsHtml;
+}
+
+// ─── VIEW: OUTCOME DETAIL ─────────────────────────────────────────────────────
+function renderOutcomeDetail() {
+  var goalId = viewCtx.goalId;
+  var g = goals.find(function(x){ return x.id === goalId; });
+  if (!g) return '<p>Outcome not found.</p>';
+
+  var gProjects = projects.filter(function(p){ return p.goalId === goalId && !p.archived; });
+  var gArchived = projects.filter(function(p){ return p.goalId === goalId && p.archived; });
+  var totalProjects = gProjects.length;
+  var pGreen = gProjects.filter(function(p){return p.actual==='green';}).length;
+  var pYellow = gProjects.filter(function(p){return p.actual==='yellow';}).length;
+  var pRed = gProjects.filter(function(p){return p.actual==='red';}).length;
+  var delayed = gProjects.filter(function(p){return p.delayed>0;}).length;
+  var vm = outcomeViewMode;
+
+  var breadcrumb = '<div class="breadcrumb">'
+    + '<span class="bc-link" onclick="navigate(\'outcomes\')">Outcomes</span>'
+    + '<span class="bc-sep">›</span>'
+    + '<span>' + g.name.substring(0,60) + (g.name.length>60?'…':'') + '</span>'
+    + '</div>';
+
+  var statRow = '<div class="stat-row" style="grid-template-columns:repeat(5,1fr)">'
+    + '<div class="stat-card"><div class="s-label">Current</div><div class="s-val">' + g.current + '</div></div>'
+    + '<div class="stat-card"><div class="s-label">Target</div><div class="s-val">' + g.target + '</div></div>'
+    + '<div class="stat-card"><div class="s-label">Progress</div><div style="margin-top:10px">' + hbar(g.progress,8) + '</div><div style="font-size:20px;font-weight:700;margin-top:6px">' + g.progress + '%</div></div>'
+    + '<div class="stat-card"><div class="s-label">Projects</div><div style="font-size:20px;font-weight:700;margin-top:6px">' + totalProjects + '</div><div style="display:flex;gap:4px;margin-top:8px"><span class="health-chip chip-g">' + pGreen + '</span><span class="health-chip chip-y">' + pYellow + '</span><span class="health-chip chip-r">' + pRed + '</span></div></div>'
+    + '<div class="stat-card"><div class="s-label">Delayed</div><div class="s-val" style="color:' + (delayed>0?'var(--red)':'var(--green)') + '">' + delayed + '</div></div>'
+    + '</div>';
+
+  var toggleHtml = '<div class="view-toggle">'
+    + '<button class="vt-btn' + (vm==='list'?' active':'') + '" onclick="outcomeViewMode=\'list\';render()">List</button>'
+    + '<button class="vt-btn' + (vm==='kanban'?' active':'') + '" onclick="outcomeViewMode=\'kanban\';render()">Kanban</button>'
+    + '<button class="vt-btn' + (vm==='gantt'?' active':'') + '" onclick="outcomeViewMode=\'gantt\';render()">Gantt</button>'
+    + '</div>';
+
+  var projectsContent = '';
+  if (vm === 'list') {
+    projectsContent = '<div style="overflow-x:auto"><table>'
+      + '<thead><tr><th>Project</th><th>Type</th><th>Milestone</th><th>Due</th><th>Owner</th><th>Progress</th><th>Delivery</th><th>Status</th><th></th></tr></thead><tbody>';
+    gProjects.forEach(function(p){
+      projectsContent += '<tr style="cursor:pointer" onclick="navigate(\'project-detail\',{projectId:\'' + p.id + '\',from:\'outcome\',goalId:\'' + g.id + '\'})">'
+        + '<td style="font-weight:500">' + p.name + '</td>'
+        + '<td>' + typeBadge(p.type) + '</td>'
+        + '<td style="font-size:12px;color:var(--text2);max-width:180px">' + p.milestone + '</td>'
+        + '<td style="white-space:nowrap">' + p.due + (p.proposedDue ? '<br><span style="font-size:11px;color:var(--yellow)">→ ' + p.proposedDue + '</span>' : '') + '</td>'
+        + '<td>' + avatar(p.owner,'sm') + ' <span style="font-size:12px">' + p.ownerName + '</span></td>'
+        + '<td style="min-width:100px">' + hbar(p.health) + '<span style="font-size:11px;color:var(--text2)">' + p.health + '%</span></td>'
+        + '<td>' + deliveryBadge(p) + '</td>'
+        + '<td>' + rag(p.actual) + '</td>'
+        + '<td><button class="arch-btn" onclick="event.stopPropagation();archiveItem(\'project\',\'' + p.id + '\')">' + archSvg() + '</button></td>'
+        + '</tr>';
+    });
+    projectsContent += '</tbody></table></div>';
+  } else if (vm === 'kanban') {
+    var cols = [
+      {key:'green', label:'On Track'},
+      {key:'yellow', label:'At Risk'},
+      {key:'red', label:'Off Track'},
+      {key:'none', label:'Not Set'},
+    ];
+    projectsContent = '<div class="kanban-wrap">';
+    cols.forEach(function(col){
+      var colProjects = gProjects.filter(function(p){ return (col.key==='none' ? !p.actual : p.actual===col.key); });
+      projectsContent += '<div class="kanban-col"><div class="kanban-col-hd">' + col.label + ' <span style="color:var(--text)">' + colProjects.length + '</span></div>';
+      colProjects.forEach(function(p){
+        projectsContent += '<div class="kanban-card" onclick="navigate(\'project-detail\',{projectId:\'' + p.id + '\',from:\'outcome\',goalId:\'' + g.id + '\'})">'
+          + '<div style="font-size:13px;font-weight:500;margin-bottom:6px">' + p.name + '</div>'
+          + '<div style="font-size:11px;color:var(--text2);margin-bottom:8px">' + p.milestone + '</div>'
+          + hbar(p.health)
+          + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">'
+          + avatar(p.owner,'sm') + '<span style="font-size:11px;color:var(--text2)">' + p.due + '</span>'
+          + '</div></div>';
+      });
+      projectsContent += '</div>';
+    });
+    projectsContent += '</div>';
+  } else if (vm === 'gantt') {
+    projectsContent = '<div class="gantt-wrap"><div class="gantt-grid">'
+      + '<div class="gantt-hd"><div class="gantt-label" style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase">Project</div>'
+      + '<div class="gantt-months">' + MONTHS.map(function(m){ return '<div class="gantt-month">' + m + '</div>'; }).join('') + '</div></div>';
+    var todayLeft = ganttTodayLeft();
+    gProjects.forEach(function(p){
+      var d = parsePlanDate(p.due + ', 2026');
+      var left = d ? ganttBarLeft(d) : 10;
+      var barW = Math.max(2, p.health < 100 ? 8 : 4);
+      var barColor = p.actual === 'green' ? 'var(--green)' : p.actual === 'yellow' ? 'var(--yellow)' : 'var(--red)';
+      projectsContent += '<div class="gantt-row" style="cursor:pointer" onclick="navigate(\'project-detail\',{projectId:\'' + p.id + '\',from:\'outcome\',goalId:\'' + g.id + '\'})">'
+        + '<div class="gantt-label">' + p.name + '</div>'
+        + '<div class="gantt-track" style="position:relative">'
+        + '<div class="gantt-today" style="left:' + todayLeft + '%"></div>'
+        + '<div class="gantt-bar" style="left:' + Math.max(0,left-barW/2) + '%;width:' + barW + '%;background:' + barColor + '">' + p.due + '</div>'
+        + '</div></div>';
+    });
+    projectsContent += '</div></div>';
+  }
+
+  var cardHtml = '<div class="card-wrap">'
+    + '<div class="card-hd"><span class="card-hd-title">Projects</span>' + rag(g.status) + '<div style="margin-left:auto">' + toggleHtml + '</div></div>'
+    + projectsContent
+    + '</div>';
+
+  var archivedHtml = '';
+  if (gArchived.length > 0) {
+    archivedHtml += '<div id="sh-ap-' + goalId + '" class="section-hd collapsed" onclick="toggleSection(\'ap-' + goalId + '\')">'
+      + '<span class="s-title" style="color:var(--muted)">Archived Projects</span><span class="s-pill">' + gArchived.length + '</span>' + chevSvg() + '</div>'
+      + '<div id="sb-ap-' + goalId + '" class="section-body hidden"><table><tbody>';
+    gArchived.forEach(function(p){
+      archivedHtml += '<tr class="archived-item"><td>' + p.name + '</td><td>' + typeBadge(p.type) + '</td><td>' + p.due + '</td>'
+        + '<td><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="archiveItem(\'project\',\'' + p.id + '\')">' + restoreSvg() + ' Restore</button></td></tr>';
+    });
+    archivedHtml += '</tbody></table></div>';
+  }
+
+  return breadcrumb + statRow + cardHtml + archivedHtml;
+}
+
+// ─── VIEW: PROJECTS ───────────────────────────────────────────────────────────
+function renderProjects() {
+  var filter = viewCtx.filter || 'need-attention';
+  var active = projects.filter(function(p){ return !p.archived; });
+  var archived = projects.filter(function(p){ return p.archived; });
+
+  var tiles = [
+    {key:'all', label:'All', val: active.length},
+    {key:'completed', label:'Completed', val: active.filter(function(p){return p.health>=100;}).length},
+    {key:'on-track', label:'On Track', val: active.filter(function(p){return p.actual==='green';}).length},
+    {key:'need-attention', label:'Need Attention', val: active.filter(function(p){return p.actual==='yellow';}).length},
+    {key:'at-risk', label:'At Risk', val: active.filter(function(p){return p.actual==='yellow'&&p.delayed>0;}).length},
+    {key:'overdue', label:'Overdue', val: active.filter(function(p){return p.actual==='red';}).length},
+    {key:'archived', label:'Archived', val: archived.length},
+  ];
+
+  var filtered;
+  if (filter==='all') filtered=active;
+  else if(filter==='completed') filtered=active.filter(function(p){return p.health>=100;});
+  else if(filter==='on-track') filtered=active.filter(function(p){return p.actual==='green';});
+  else if(filter==='need-attention') filtered=active.filter(function(p){return p.actual==='yellow';});
+  else if(filter==='at-risk') filtered=active.filter(function(p){return p.actual==='yellow'&&p.delayed>0;});
+  else if(filter==='overdue') filtered=active.filter(function(p){return p.actual==='red';});
+  else if(filter==='archived') filtered=archived;
+  else filtered=active;
+
+  var iceHtml = '<div class="iceberg">';
+  tiles.forEach(function(t){
+    iceHtml += '<div class="iceberg-tile clickable' + (filter===t.key?' active':'') + '" onclick="navigate(\'projects\',{filter:\'' + t.key + '\'})">'
+      + '<div class="it-val">' + t.val + '</div><div class="it-lbl">' + t.label + '</div></div>';
+  });
+  iceHtml += '</div>';
+
+  var cats = ['Working Capital','Delivery Reliability','Process Speed','Lean & Quality'];
+  var sectionsHtml = '';
+  cats.forEach(function(cat){
+    var catGoals = goals.filter(function(g){ return g.category===cat; });
+    catGoals.forEach(function(g){
+      var gps = filtered.filter(function(p){ return p.goalId===g.id; });
+      if (!gps.length) return;
+      var sid = ('pg-' + g.id);
+      var pGreen = gps.filter(function(p){return p.actual==='green';}).length;
+      var pYellow = gps.filter(function(p){return p.actual==='yellow';}).length;
+      var pRed = gps.filter(function(p){return p.actual==='red';}).length;
+      sectionsHtml += '<div id="sh-' + sid + '" class="section-hd" onclick="toggleSection(\'' + sid + '\')">'
+        + '<span class="s-title">' + cat + ' › <span style="color:var(--text2);font-weight:400">' + g.name.substring(0,50) + (g.name.length>50?'…':'') + '</span></span>'
+        + '<span class="s-pill">' + gps.length + ' projects</span>'
+        + (pGreen?'<span style="font-size:11px;color:var(--green)">' + pGreen + ' ●</span>':'')
+        + (pYellow?'<span style="font-size:11px;color:var(--yellow)">' + pYellow + ' ●</span>':'')
+        + (pRed?'<span style="font-size:11px;color:var(--red)">' + pRed + ' ●</span>':'')
+        + chevSvg() + '</div>';
+      sectionsHtml += '<div id="sb-' + sid + '" class="section-body"><div style="overflow-x:auto"><table>'
+        + '<thead><tr><th>Project</th><th>Type</th><th>Approval</th><th>Due</th><th>Owner</th><th>Progress</th><th>Delivery</th><th>Status</th><th></th></tr></thead><tbody>';
+      gps.forEach(function(p){
+        sectionsHtml += '<tr style="cursor:pointer" onclick="navigate(\'project-detail\',{projectId:\'' + p.id + '\',from:\'projects\'})">'
+          + '<td style="font-weight:500">' + p.name + '</td>'
+          + '<td>' + typeBadge(p.type) + '</td>'
+          + '<td>' + approvalBadge(p.approvalStatus) + '</td>'
+          + '<td style="white-space:nowrap">' + p.due + (p.proposedDue?'<br><span style="font-size:11px;color:var(--yellow)">→ ' + p.proposedDue + '</span>':'') + '</td>'
+          + '<td>' + avatar(p.owner,'sm') + ' <span style="font-size:12px">' + p.ownerName + '</span></td>'
+          + '<td style="min-width:100px">' + hbar(p.health) + '<span style="font-size:11px;color:var(--text2)">' + p.health + '%</span></td>'
+          + '<td>' + deliveryBadge(p) + '</td>'
+          + '<td>' + rag(p.actual) + '</td>'
+          + '<td><button class="arch-btn" onclick="event.stopPropagation();archiveItem(\'project\',\'' + p.id + '\')">' + archSvg() + '</button></td>'
+          + '</tr>';
+      });
+      sectionsHtml += '</tbody></table></div></div>';
+    });
+  });
+
+  return iceHtml + sectionsHtml;
+}
+
+// ─── VIEW: PROJECT DETAIL ─────────────────────────────────────────────────────
+function renderProjectDetail() {
+  var pid = viewCtx.projectId;
+  var p = projects.find(function(x){ return x.id === pid; });
+  if (!p) return '<p>Project not found.</p>';
+  var g = goals.find(function(x){ return x.id === p.goalId; });
+  var tasks = tasksData[pid] || [];
+  var ccpm = computeCCPM(tasks);
+  var vm = taskViewMode;
+
+  var breadcrumb = '<div class="breadcrumb">';
+  if (viewCtx.from === 'projects') {
+    breadcrumb += '<span class="bc-link" onclick="navigate(\'projects\')">All Projects</span>'
+      + '<span class="bc-sep">›</span><span>' + p.name + '</span>';
+  } else {
+    breadcrumb += '<span class="bc-link" onclick="navigate(\'outcomes\')">Outcomes</span>'
+      + '<span class="bc-sep">›</span>'
+      + (g ? '<span class="bc-link" onclick="navigate(\'outcome-detail\',{goalId:\'' + g.id + '\'})">' + g.name.substring(0,40) + (g.name.length>40?'…':'') + '</span>' : '')
+      + '<span class="bc-sep">›</span><span>' + p.name + '</span>';
+  }
+  breadcrumb += '</div>';
+
+  var bufColor = ccpm.bufferStatus === 'red' ? 'var(--red)' : ccpm.bufferStatus === 'yellow' ? 'var(--yellow)' : 'var(--green)';
+  var bufPctClamped = Math.min(100, ccpm.bufferPct);
+  var bufBar = '<div class="buf-bar">'
+    + '<div class="buf-seg" style="width:' + (100-bufPctClamped) + '%;background:var(--green);opacity:.7"></div>'
+    + '<div class="buf-seg" style="width:' + bufPctClamped + '%;background:' + bufColor + '"></div>'
+    + '</div>';
+  var bnTask = ccpm.activeBottleneck !== null ? tasks[ccpm.activeBottleneck] : null;
+
+  var statRow = '<div class="stat-row" style="grid-template-columns:repeat(5,1fr)">'
+    + '<div class="stat-card"><div class="s-label">Milestone</div><div style="font-size:13px;font-weight:500;margin-top:6px;line-height:1.4">' + p.milestone + '</div>'
+    + '<div style="font-size:11px;color:var(--text2);margin-top:6px">Due: ' + p.due + (p.proposedDue ? ' → <span style="color:var(--yellow)">' + p.proposedDue + '</span>' : '') + '</div></div>'
+    + '<div class="stat-card"><div class="s-label">Task Health</div>'
+    + '<div style="margin-top:8px">' + hbar(p.health, 8) + '</div>'
+    + '<div style="font-size:13px;margin-top:6px"><strong>' + p.done + '</strong> done · <strong style="color:' + (p.delayed?'var(--red)':'var(--text)') + '">' + p.delayed + '</strong> delayed</div></div>'
+    + '<div class="stat-card"><div class="s-label">Planned Signal</div><div style="margin-top:10px">' + rag(p.planned) + '</div></div>'
+    + '<div class="stat-card"><div class="s-label">Delivery</div><div style="margin-top:10px">' + deliveryBadge(p) + ' ' + rag(p.actual) + '</div></div>'
+    + '<div class="stat-card"><div class="s-label">Project Buffer (CCPM)</div>'
+    + bufBar
+    + '<div style="font-size:13px;font-weight:600;color:' + bufColor + '">' + Math.round(ccpm.bufferRemaining) + 'd left of ' + Math.round(ccpm.projectBuffer) + 'd</div>'
+    + (bnTask ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">Bottleneck: ' + bnTask.name.substring(0,30) + '</div>' : '')
+    + '</div>'
+    + '</div>';
+
+  var warnings = '';
+  if (p.planned !== p.actual) {
+    warnings += '<div class="info-box warn">⚠ RAG mismatch: planned as <strong>' + p.planned + '</strong> but currently <strong>' + p.actual + '</strong></div>';
+  }
+  if (p.delayed > 0) {
+    warnings += '<div class="info-box danger">⚠ ' + p.delayed + ' task' + (p.delayed!==1?'s are':' is') + ' overdue in this project</div>';
+  }
+
+  var toggleHtml = '<div class="view-toggle">'
+    + '<button class="vt-btn' + (vm==='list'?' active':'') + '" onclick="taskViewMode=\'list\';render()">List</button>'
+    + '<button class="vt-btn' + (vm==='board'?' active':'') + '" onclick="taskViewMode=\'board\';render()">Board</button>'
+    + '<button class="vt-btn' + (vm==='gantt'?' active':'') + '" onclick="taskViewMode=\'gantt\';render()">Gantt</button>'
+    + '</div>';
+
+  var tasksContent = '';
+  if (vm === 'list') {
+    tasksContent = '<div style="overflow-x:auto"><table>'
+      + '<thead><tr><th>Task</th><th>DRI</th><th>Timeline</th><th>Planned</th><th>Actual</th><th>Status</th></tr></thead><tbody>';
+    tasks.forEach(function(t, i){
+      var isBn = i === ccpm.activeBottleneck;
+      var feed = ccpm.feedingAtRisk[i];
+      var rowStyle = isBn ? ' class="bn-row"' : '';
+      var badges = '';
+      if (isBn) badges += ' <span class="pill pill-orange">bottleneck</span>';
+      if (t.parallel) {
+        if (feed && feed.exhausted) badges += ' <span class="pill pill-red">⚠ now critical</span>';
+        else if (feed && feed.low) badges += ' <span class="pill pill-yellow">buffer low</span>';
+        else badges += ' <span class="pill pill-muted">parallel</span>';
+      }
+      var delayLabel = '';
+      if (t.done) {
+        if (t.delayDays > 0 || t.delayHrs > 0) delayLabel = '<span style="color:var(--red)">' + t.delayDays + 'd ' + (t.delayHrs?t.delayHrs+'h':'') + ' late</span>';
+        else if (t.earlyDays > 0 || t.earlyHrs > 0) delayLabel = '<span style="color:var(--green)">' + t.earlyDays + 'd early</span>';
+        else delayLabel = '<span style="color:var(--green)">On time</span>';
+      } else if (t.delayDays > 0 || t.delayHrs > 0) {
+        delayLabel = '<span style="color:var(--red)">' + t.delayDays + 'd ' + (t.delayHrs?t.delayHrs+'h':'') + ' late</span>';
+      } else {
+        delayLabel = '<span style="color:var(--muted)">—</span>';
+      }
+      var statusBadge = '';
+      if (t.done) statusBadge = '<span class="pill pill-green">Done</span>';
+      else if (t.due === 'overdue') statusBadge = '<span class="pill pill-red">Overdue</span>';
+      else statusBadge = '<span class="pill pill-green" style="background:rgba(34,197,94,.08)">On Track</span>';
+      tasksContent += '<tr' + rowStyle + '>'
+        + '<td style="' + (t.done?'text-decoration:line-through;color:var(--text2)':'') + '">' + t.name + badges + '</td>'
+        + '<td style="white-space:nowrap">' + avatar(t.assignee,'sm') + ' <span style="font-size:12px">' + t.doer + '</span></td>'
+        + '<td style="min-width:120px">' + delayBar(t) + '</td>'
+        + '<td style="font-size:12px;color:var(--text2)">' + t.planDate + '</td>'
+        + '<td style="font-size:12px;color:var(--text2)">' + (t.actualDate || '—') + '</td>'
+        + '<td>' + statusBadge + '</td>'
+        + '</tr>';
+    });
+    tasksContent += '</tbody></table></div>';
+  } else if (vm === 'board') {
+    var bcols = [
+      {key:'done', label:'Done', tasks: tasks.filter(function(t){return t.done;})},
+      {key:'upcoming', label:'Upcoming', tasks: tasks.filter(function(t){return !t.done && t.due==='future';})},
+      {key:'today', label:'Today', tasks: tasks.filter(function(t){return !t.done && t.due==='today';})},
+      {key:'overdue', label:'Overdue', tasks: tasks.filter(function(t){return !t.done && t.due==='overdue';})},
+    ];
+    tasksContent = '<div class="board-wrap">';
+    bcols.forEach(function(col){
+      tasksContent += '<div class="board-col"><div class="board-col-hd">' + col.label + ' <span style="color:var(--text)">' + col.tasks.length + '</span></div>';
+      col.tasks.forEach(function(t){
+        var dl = t.done && (t.delayDays||t.earlyDays) ? (t.delayDays>0?'<span style="color:var(--red);font-size:11px">'+t.delayDays+'d late</span>':'<span style="color:var(--green);font-size:11px">'+t.earlyDays+'d early</span>') : '';
+        tasksContent += '<div class="board-card">'
+          + '<div style="font-weight:500;margin-bottom:8px;' + (t.done?'text-decoration:line-through;color:var(--text2)':'') + '">' + t.name + '</div>'
+          + '<div style="margin-bottom:8px">' + delayBar(t) + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between">'
+          + '<div style="display:flex;align-items:center;gap:5px">'
+          + avatar(t.assignee,'sm')
+          + '<span style="font-size:11px;color:var(--text2)">' + t.doer + '</span>'
+          + '</div>'
+          + '<span style="font-size:11px;color:var(--muted)">' + t.planDate + '</span>'
+          + '</div></div>';
+      });
+      tasksContent += '</div>';
+    });
+    tasksContent += '</div>';
+  } else if (vm === 'gantt') {
+    var todayLeft = ganttTodayLeft();
+    tasksContent = '<div class="gantt-wrap"><div class="gantt-grid">'
+      + '<div class="gantt-hd"><div class="gantt-label" style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase">Task</div>'
+      + '<div class="gantt-months">' + MONTHS.map(function(m){ return '<div class="gantt-month">' + m + '</div>'; }).join('') + '</div></div>';
+    tasks.forEach(function(t, i){
+      var d = parsePlanDate(t.planDate);
+      var left = d ? ganttBarLeft(d) : 5;
+      var w = ganttBarWidth(t.tatDays);
+      var barColor = t.done ? 'var(--green)' : (t.due==='overdue' ? 'var(--red)' : (t.due==='today' ? 'var(--accent)' : 'var(--indigo)'));
+      var isBn = i === ccpm.activeBottleneck;
+      if (isBn) barColor = 'var(--accent)';
+      tasksContent += '<div class="gantt-row">'
+        + '<div class="gantt-label" style="' + (t.done?'color:var(--muted)':'') + '">' + t.name + '</div>'
+        + '<div class="gantt-track" style="position:relative">'
+        + '<div class="gantt-today" style="left:' + todayLeft + '%"></div>'
+        + '<div class="gantt-bar" style="left:' + left + '%;width:' + w + '%;background:' + barColor + '">'
+        + (t.delayDays>0?t.delayDays+'d late':t.earlyDays>0?t.earlyDays+'d early':'')
+        + '</div></div></div>';
+    });
+    tasksContent += '</div></div>';
+  }
+
+  var taskCard = '<div class="card-wrap">'
+    + '<div class="card-hd"><span class="card-hd-title">Tasks</span><div style="margin-left:auto">' + toggleHtml + '</div></div>'
+    + tasksContent + '</div>';
+
+  return breadcrumb + statRow + warnings + taskCard;
+}
+
+// ─── VIEW: MY TASKS ───────────────────────────────────────────────────────────
+function renderMyTasks() {
+  var allMyTasks = [];
+  projects.forEach(function(p){
+    var ts = tasksData[p.id] || [];
+    ts.forEach(function(t, i){
+      if (t.assignee === 'KA') allMyTasks.push({task:t, project:p, idx:i});
+    });
+  });
+
+  var filter = viewCtx.filter || 'all';
+  var total = allMyTasks.length;
+  var done = allMyTasks.filter(function(x){return x.task.done;}).length;
+  var overdue = allMyTasks.filter(function(x){return !x.task.done&&x.task.due==='overdue';}).length;
+  var today = allMyTasks.filter(function(x){return !x.task.done&&x.task.due==='today';}).length;
+  var upcoming = allMyTasks.filter(function(x){return !x.task.done&&x.task.due==='future';}).length;
+
+  var tiles = [
+    {key:'all',label:'Total',val:total},
+    {key:'done',label:'Done',val:done},
+    {key:'overdue',label:'Overdue',val:overdue},
+    {key:'today',label:'Today',val:today},
+    {key:'upcoming',label:'Upcoming',val:upcoming},
+  ];
+
+  var filtered;
+  if (filter==='done') filtered=allMyTasks.filter(function(x){return x.task.done;});
+  else if(filter==='overdue') filtered=allMyTasks.filter(function(x){return !x.task.done&&x.task.due==='overdue';});
+  else if(filter==='today') filtered=allMyTasks.filter(function(x){return !x.task.done&&x.task.due==='today';});
+  else if(filter==='upcoming') filtered=allMyTasks.filter(function(x){return !x.task.done&&x.task.due==='future';});
+  else filtered=allMyTasks;
+
+  var iceHtml = '<div class="iceberg">';
+  tiles.forEach(function(t){
+    iceHtml += '<div class="iceberg-tile clickable' + (filter===t.key?' active':'') + '" onclick="navigate(\'mytasks\',{filter:\'' + t.key + '\'})">'
+      + '<div class="it-val">' + t.val + '</div><div class="it-lbl">' + t.label + '</div></div>';
+  });
+  iceHtml += '</div>';
+
+  var byProject = {};
+  filtered.forEach(function(x){
+    if (!byProject[x.project.id]) byProject[x.project.id] = {project:x.project, tasks:[]};
+    byProject[x.project.id].tasks.push(x);
+  });
+
+  var sectionsHtml = '';
+  Object.keys(byProject).forEach(function(pid){
+    var grp = byProject[pid];
+    var p = grp.project;
+    var g = goals.find(function(x){return x.id===p.goalId;});
+    var sid = 'mt-' + pid;
+    sectionsHtml += '<div id="sh-' + sid + '" class="section-hd" onclick="toggleSection(\'' + sid + '\')">'
+      + '<span class="s-title">' + p.name + '</span>'
+      + '<span class="s-pill">' + grp.tasks.length + ' tasks</span>'
+      + (g?'<span class="s-pill" style="color:var(--muted)">' + g.category + '</span>':'')
+      + chevSvg() + '</div>'
+      + '<div id="sb-' + sid + '" class="section-body"><div style="overflow-x:auto"><table>'
+      + '<thead><tr><th>Task</th><th>DRI</th><th>Timeline</th><th>Planned</th><th>Actual</th><th>Status</th></tr></thead><tbody>';
+    grp.tasks.forEach(function(x){
+      var t = x.task;
+      var statusBadge = t.done ? '<span class="pill pill-green">Done</span>'
+        : t.due==='overdue' ? '<span class="pill pill-red">Overdue</span>'
+        : t.due==='today' ? '<span class="pill pill-orange">Today</span>'
+        : '<span class="pill pill-muted">Upcoming</span>';
+      sectionsHtml += '<tr><td style="' + (t.done?'text-decoration:line-through;color:var(--text2)':'') + '">' + t.name + '</td>'
+        + '<td style="white-space:nowrap">' + avatar(t.assignee,'sm') + ' <span style="font-size:12px">' + t.doer + '</span></td>'
+        + '<td style="min-width:120px">' + delayBar(t) + '</td>'
+        + '<td style="font-size:12px;color:var(--text2)">' + t.planDate + '</td>'
+        + '<td style="font-size:12px;color:var(--text2)">' + (t.actualDate||'—') + '</td>'
+        + '<td>' + statusBadge + '</td></tr>';
+    });
+    sectionsHtml += '</tbody></table></div></div>';
+  });
+
+  return iceHtml + sectionsHtml;
+}
+
+// ─── STUB VIEWS ───────────────────────────────────────────────────────────────
+function renderStub(title, desc) {
+  return '<div class="stub-wrap">'
+    + '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>'
+    + '<h2>' + title + '</h2>'
+    + '<p>' + desc + '</p>'
+    + '</div>';
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+var titleMap = {
+  outcomes: 'Outcomes',
+  'outcome-detail': 'Outcome Detail',
+  projects: 'All Projects',
+  'project-detail': 'Project Detail',
+  mytasks: 'My Tasks',
+  flows: 'Flows',
+  loops: 'Loops',
+  teamreview: 'Team Review',
+  acemeeting: 'ACE Meeting',
+  approvals: 'Approvals',
+  settings: 'Settings',
+};
+
+function navigate(view, ctx) {
+  prevView = currentView;
+  prevCtx = viewCtx || {};
+  currentView = view;
+  viewCtx = ctx || {};
+  render();
+}
+
+function render() {
+  document.querySelectorAll('.nav-item').forEach(function(el){
+    var v = el.getAttribute('data-view');
+    el.classList.toggle('active', v === currentView || (currentView === 'outcome-detail' && v === 'outcomes') || (currentView === 'project-detail' && (prevView === 'projects' ? v === 'projects' : v === 'outcomes')));
+  });
+
+  var mainView = currentView;
+  if (mainView === 'project-detail' || mainView === 'outcome-detail') {
+    document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+    if (mainView === 'outcome-detail') {
+      var navO = document.querySelector('.nav-item[data-view="outcomes"]');
+      if (navO) navO.classList.add('active');
+    } else if (mainView === 'project-detail') {
+      var from = viewCtx.from || '';
+      var navP = document.querySelector('.nav-item[data-view="' + (from==='projects'?'projects':'outcomes') + '"]');
+      if (navP) navP.classList.add('active');
+    }
+  } else {
+    document.querySelectorAll('.nav-item').forEach(function(el){
+      el.classList.toggle('active', el.getAttribute('data-view') === currentView);
+    });
+  }
+
+  document.getElementById('topbar-title').textContent = titleMap[currentView] || currentView;
+
+  var content = '';
+  if (currentView === 'outcomes') content = renderOutcomes();
+  else if (currentView === 'outcome-detail') content = renderOutcomeDetail();
+  else if (currentView === 'projects') content = renderProjects();
+  else if (currentView === 'project-detail') content = renderProjectDetail();
+  else if (currentView === 'mytasks') content = renderMyTasks();
+  else if (currentView === 'flows') content = renderStub('Flows', 'Process flow maps and bottleneck analysis will appear here.');
+  else if (currentView === 'loops') content = renderStub('Loops', 'Feedback loops and recurring review cycles will appear here.');
+  else if (currentView === 'teamreview') content = renderStub('Team Review', 'Weekly team performance reviews and scorecards will appear here.');
+  else if (currentView === 'acemeeting') content = renderStub('ACE Meeting', 'ACE (Accountability, Cadence, Execution) meeting agendas and notes will appear here.');
+  else if (currentView === 'approvals') content = renderStub('Approvals', 'Pending approvals for projects and milestones will appear here. 2 items awaiting review.');
+  else if (currentView === 'settings') content = renderStub('Settings', 'Application settings and preferences will appear here.');
+  else content = '<p>View not found.</p>';
+
+  document.getElementById('content').innerHTML = content;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+navigate('outcomes', {filter: 'need-attention'});
+</script>
+</body>
+</html>
